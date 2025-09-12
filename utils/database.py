@@ -1,6 +1,11 @@
 import sqlite3
 import os
 import hashlib
+import csv
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import cm
+from datetime import datetime
 
 # Pastas/Arquivo
 DATABASE_DIR = "data"
@@ -22,6 +27,7 @@ def create_tables():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Create 'produtos' table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS produtos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,15 +41,39 @@ def create_tables():
             data_validade TEXT
         );
     """)
+
+    # Create 'users' table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
-            role TEXT DEFAULT 'staff'  -- 'admin' or 'staff'
+            role TEXT DEFAULT 'staff'
         );
     """)
+    
+    # Create tables for product categories
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS marcas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL UNIQUE
+        );
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS estilos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL UNIQUE
+        );
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tipos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL UNIQUE
+        );
+    """)
+    
     conn.commit()
+
     # If role column missing from legacy DB, try to add it
     try:
         cols = [c[1] for c in conn.execute("PRAGMA table_info(users)").fetchall()]
@@ -117,7 +147,6 @@ def delete_produto(produto_id):
 
 # ---------- CSV Export/Import ----------
 def export_produtos_to_csv(csv_path):
-    import csv
     produtos = get_all_produtos()
     if not produtos:
         raise ValueError('Nenhum produto para exportar')
@@ -129,8 +158,6 @@ def export_produtos_to_csv(csv_path):
             writer.writerow({k: p.get(k) for k in keys})
 
 def import_produtos_from_csv(csv_path):
-    import csv
-    from datetime import datetime
     conn = get_db_connection()
     with open(csv_path, newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -145,7 +172,7 @@ def import_produtos_from_csv(csv_path):
             foto = row.get('foto') or None
             data_validade = row.get('data_validade') or None
             conn.execute("""INSERT INTO produtos (nome, preco, quantidade, marca, estilo, tipo, foto, data_validade)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (nome, preco, quantidade, marca, estilo, tipo, foto, data_validade))
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (nome, preco, quantidade, marca, estilo, tipo, foto, data_validade))
     conn.commit()
     conn.close()
 
@@ -172,11 +199,50 @@ def get_all_users():
     conn.close()
     return [dict(r) for r in rows]
 
+# ---------- Categories CRUD ----------
+def add_marca(nome):
+    conn = get_db_connection()
+    conn.execute("INSERT OR IGNORE INTO marcas (nome) VALUES (?)", (nome,))
+    conn.commit()
+    conn.close()
+
+def add_estilo(nome):
+    conn = get_db_connection()
+    conn.execute("INSERT OR IGNORE INTO estilos (nome) VALUES (?)", (nome,))
+    conn.commit()
+    conn.close()
+
+def add_tipo(nome):
+    conn = get_db_connection()
+    conn.execute("INSERT OR IGNORE INTO tipos (nome) VALUES (?)", (nome,))
+    conn.commit()
+    conn.close()
+
+def get_all_marcas():
+    """Fetches all brands from the 'marcas' table."""
+    conn = get_db_connection()
+    marcas = conn.execute("SELECT nome FROM marcas ORDER BY nome").fetchall()
+    conn.close()
+    return [dict(m) for m in marcas]
+
+def get_all_estilos():
+    """Fetches all styles from the 'estilos' table."""
+    conn = get_db_connection()
+    estilos = conn.execute("SELECT nome FROM estilos ORDER BY nome").fetchall()
+    conn.close()
+    return [dict(e) for e in estilos]
+
+def get_all_tipos():
+    """Fetches all types from the 'tipos' table."""
+    conn = get_db_connection()
+    tipos = conn.execute("SELECT nome FROM tipos ORDER BY nome").fetchall()
+    conn.close()
+    return [dict(t) for t in tipos]
+
 # ---------- PDF Report ----------
 def generate_stock_pdf(output_path):
-    # uses reportlab
-    from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
     produtos = get_all_produtos()
 
