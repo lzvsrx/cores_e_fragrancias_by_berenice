@@ -22,7 +22,7 @@ if option == "Login":
                 st.session_state["logged_in"] = True
                 st.session_state["username"] = username
                 st.session_state["role"] = user.get('role')
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Usuário ou senha incorretos.")
 
