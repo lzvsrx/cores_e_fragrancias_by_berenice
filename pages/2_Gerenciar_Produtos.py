@@ -1,13 +1,3 @@
-O erro que você está enfrentando, st.experimental_rerun(), ocorre porque esta função foi descontinuada e removida do Streamlit. Para resolver isso, você deve substituí-la pela nova função recomendada, st.rerun(). A mudança é simples e não afeta o funcionamento do seu código.
-
-Solução do Erro
-O erro "File "/mount/src/cores_e_fragrancias_by_berenice/pages/2_Gerenciar_Produtos.py", line 69, in add_product_form st.experimental_rerun()" indica que o método st.experimental_rerun() foi removido da biblioteca Streamlit e deve ser substituído por st.rerun(). A função st.rerun() reinicia o script de forma mais limpa e consistente.
-
-Para corrigir o seu código, basta encontrar todas as linhas onde st.experimental_rerun() é chamado e substituí-las por st.rerun().
-
-Código Corrigido
-Python
-
 import streamlit as st
 import os
 from datetime import datetime
