@@ -3,17 +3,20 @@ import os
 from datetime import datetime
 from utils.database import (
     add_produto, get_all_produtos, update_produto, delete_produto, get_produto_by_id,
-    export_produtos_to_csv, import_produtos_from_csv, generate_stock_pdf
+    export_produtos_to_csv, import_produtos_from_csv, generate_stock_pdf,
+    get_all_marcas, get_all_estilos, get_all_tipos
 )
-
-MARCAS = ["Eudora", "O Boticário", "Jequiti", "Avon", "Mary Kay", "Natura"]
-ESTILOS = ["Perfumaria", "Skincare", "Cabelo", "Corpo e Banho", "Make", "Masculinos", "Femininos", "Kits e Presentes"]
-TIPOS = ["Perfumaria feminina", "Perfumaria masculina", "Body splash", "Shampoo", "Condicionador", "Hidratante"]
 
 st.set_page_config(page_title="Gerenciar Produtos - Cores e Fragrâncias")
 
 def add_product_form():
     st.subheader("Adicionar Novo Produto")
+    
+    # Get all available categories from the database
+    marcas = [m.get('nome') for m in get_all_marcas()]
+    estilos = [e.get('nome') for e in get_all_estilos()]
+    tipos = [t.get('nome') for t in get_all_tipos()]
+    
     with st.form("add_product_form", clear_on_submit=True):
         nome = st.text_input("Nome do Produto", max_chars=150)
         col1, col2 = st.columns(2)
@@ -21,9 +24,12 @@ def add_product_form():
             preco = st.number_input("Preço (R$)", min_value=0.00, format="%.2f")
         with col2:
             quantidade = st.number_input("Quantidade", min_value=0, step=1)
-        marca = st.selectbox("Marca", MARCAS)
-        estilo = st.selectbox("Estilo", ESTILOS)
-        tipo = st.selectbox("Tipo de Produto", TIPOS)
+        
+        # Use the lists from the database to populate the select boxes
+        marca = st.selectbox("Marca", sorted(marcas))
+        estilo = st.selectbox("Estilo", sorted(estilos))
+        tipo = st.selectbox("Tipo de Produto", sorted(tipos))
+        
         data_validade = st.date_input("Data de Validade")
         foto = st.file_uploader("Adicionar Foto do Produto", type=["jpg", "png", "jpeg"])
         submitted = st.form_submit_button("Adicionar Produto")
@@ -89,8 +95,8 @@ def manage_products_list():
             cols = st.columns([3,1,1])
             with cols[0]:
                 st.markdown(f"### {p.get('nome')}  <small style='color:gray'>ID: {produto_id}</small>", unsafe_allow_html=True)
-                st.write(f"**Preço:** R$ {float(p.get('preco')):.2f}   •   **Quantidade:** {p.get('quantidade')}")
-                st.write(f"**Marca:** {p.get('marca')}   •   **Estilo:** {p.get('estilo')}   •   **Tipo:** {p.get('tipo')}")
+                st.write(f"**Preço:** R$ {float(p.get('preco')):.2f}    •    **Quantidade:** {p.get('quantidade')}")
+                st.write(f"**Marca:** {p.get('marca')}    •    **Estilo:** {p.get('estilo')}    •    **Tipo:** {p.get('tipo')}")
                 st.write(f"**Validade:** {p.get('data_validade') or '-'}")
             with cols[1]:
                 if p.get('foto') and os.path.exists(os.path.join('assets', p.get('foto'))):
@@ -123,6 +129,11 @@ def show_edit_form():
         st.session_state["edit_mode"] = False
         return
 
+    # Get all available categories from the database
+    marcas = [m.get('nome') for m in get_all_marcas()]
+    estilos = [e.get('nome') for e in get_all_estilos()]
+    tipos = [t.get('nome') for t in get_all_tipos()]
+    
     st.subheader(f"Editar Produto: {produto.get('nome')}")
     with st.form("edit_product_form"):
         nome = st.text_input("Nome", value=produto.get("nome"))
@@ -131,9 +142,12 @@ def show_edit_form():
             preco = st.number_input("Preço (R$)", value=float(produto.get("preco")), format="%.2f")
         with col2:
             quantidade = st.number_input("Quantidade", value=int(produto.get("quantidade")), step=1)
-        marca = st.selectbox("Marca", MARCAS, index=MARCAS.index(produto.get("marca")) if produto.get("marca") in MARCAS else 0)
-        estilo = st.selectbox("Estilo", ESTILOS, index=ESTILOS.index(produto.get("estilo")) if produto.get("estilo") in ESTILOS else 0)
-        tipo = st.selectbox("Tipo", TIPOS, index=TIPOS.index(produto.get("tipo")) if produto.get("tipo") in TIPOS else 0)
+        
+        # Use the lists from the database to populate the select boxes
+        marca = st.selectbox("Marca", sorted(marcas), index=sorted(marcas).index(produto.get("marca")) if produto.get("marca") in sorted(marcas) else 0)
+        estilo = st.selectbox("Estilo", sorted(estilos), index=sorted(estilos).index(produto.get("estilo")) if produto.get("estilo") in sorted(estilos) else 0)
+        tipo = st.selectbox("Tipo", sorted(tipos), index=sorted(tipos).index(produto.get("tipo")) if produto.get("tipo") in sorted(tipos) else 0)
+        
         data_validade = st.date_input("Data de Validade", value=datetime.fromisoformat(produto.get("data_validade")).date() if produto.get("data_validade") else None)
         uploaded = st.file_uploader("Alterar Foto", type=["jpg","png","jpeg"])
         save = st.form_submit_button("Salvar Alterações")
@@ -150,13 +164,13 @@ def show_edit_form():
             st.session_state["edit_mode"] = False
             st.experimental_rerun()
 
-# Página principal de gerenciamento (somente se logado)
+# Main page logic
 if not st.session_state.get("logged_in"):
     st.error("Acesso negado. Faça login na área administrativa para gerenciar produtos.")
     st.info("Vá para a página 'Área Administrativa' para entrar ou criar um admin.")
 else:
     st.sidebar.markdown(f"**Olá, {st.session_state.get('username')} ({st.session_state.get('role','staff')})**")
-    action = st.sidebar.selectbox("Ação", ["Adicionar Produto", "Visualizar / Modificar / Remover Produtos"]) 
+    action = st.sidebar.selectbox("Ação", ["Adicionar Produto", "Visualizar / Modificar / Remover Produtos"])
     if action == "Adicionar Produto":
         add_product_form()
     else:
