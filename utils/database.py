@@ -18,6 +18,35 @@ if not os.path.exists(DATABASE_DIR):
 if not os.path.exists(ASSETS_DIR):
     os.makedirs(ASSETS_DIR)
 
+# Listas de categorias para popular o banco de dados.
+MARCAS = ["Eudora", "O Boticário", "Jequiti", "Avon", "Mary Kay"]
+
+ESTILOS = [
+    "Perfumaria", "Skincare", "Cabelo", "Corpo e Banho", "Make", "Masculinos", "Femininos Nina Secrets",
+    "Marcas", "Infantil", "Casa", "Solar", "Maquiage", "Teen", "Kits e Presentes",
+    "Cuidados com o Corpo", "Lançamentos"
+]
+
+TIPOS = [
+    "Perfumaria masculina", "Perfumaria feminina", "Body splash", "Body spray", "Eau de parfum",
+    "Desodorantes", "Perfumaria infantil", "Perfumaria vegana", "Familia olfativa",
+    "Clareador de manchas", "Anti-idade", "Protetor solar facial", "Rosto",
+    "Tratamento para o rosto", "Acne", "Limpeza", "Esfoliante", "Tônico facial",
+    "Kits de tratamento", "Tratamento para cabelos", "Shampoo", "Condicionador",
+    "Leave-in e Creme para Pentear", "Finalizador", "Modelador", "Acessórios",
+    "Kits e looks", "Boca", "Olhos", "Pincéis", "Paleta", "Unhas", "Sobrancelhas",
+    "Kits de tratamento", "Hidratante", "Cuidados pós-banho", "Cuidados para o banho",
+    "Barba", "Óleo corporal", "Cuidados íntimos", "Unissex", "Bronzeamento",
+    "Protetor solar", "Depilação", "Mãos", "Lábios", "Pés", "Pós sol",
+    "Protetor solar corporal", "Colônias", "Estojo", "Sabonetes",
+    "Creme hidratante para as mãos", "Creme hidratante para os pés", "Miniseries",
+    "Kits de perfumes", "Antissinais", "Máscara", "Creme bisnaga",
+    "Roll On Fragranciado", "Roll On On Duty", "Sabonete líquido",
+    "Sabonete em barra", "Shampoo 2 em 1", "Spray corporal", "Booster de Tratamento",
+    "Creme para Pentear", "Óleo de Tratamento", "Pré-shampoo",
+    "Sérum de Tratamento", "Shampoo e Condicionador"
+]
+
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
