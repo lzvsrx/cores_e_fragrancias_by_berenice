@@ -17,6 +17,7 @@ Este é o aplicativo para **gerenciamento de estoque** da loja.
 
 Use o menu lateral (ícone das páginas do Streamlit) para navegar entre:
 - 📦 Estoque Completo
+- 💰 Produtos Vendidos
 - 🔐 Área Administrativa (login / cadastro)
 - 🛠️ Gerenciar Produtos (somente após login)
 """)

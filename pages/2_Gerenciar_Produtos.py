@@ -3,7 +3,8 @@ import os
 from datetime import datetime
 from utils.database import (
     add_produto, get_all_produtos, update_produto, delete_produto, get_produto_by_id,
-    export_produtos_to_csv, import_produtos_from_csv, generate_stock_pdf
+    export_produtos_to_csv, import_produtos_from_csv, generate_stock_pdf,
+    mark_produto_as_sold
 )
 
 # Lista de marcas de produtos.
@@ -119,6 +120,16 @@ def manage_products_list():
                 st.write(f"**Preço:** R$ {float(p.get('preco')):.2f}   •   **Quantidade:** {p.get('quantidade')}")
                 st.write(f"**Marca:** {p.get('marca')}   •   **Estilo:** {p.get('estilo')}   •   **Tipo:** {p.get('tipo')}")
                 st.write(f"**Validade:** {p.get('data_validade') or '-'}")
+                
+                # Botão de venda adicionado aqui
+                if p.get("quantidade") > 0:
+                    if st.button("Vender", key=f'sell_{produto_id}'):
+                        mark_produto_as_sold(produto_id, 1) # Vende 1 unidade
+                        st.success(f"1 unidade de '{p.get('nome')}' foi vendida.")
+                        st.rerun()
+                else:
+                    st.info("Fora de estoque.")
+
             with cols[1]:
                 if p.get('foto') and os.path.exists(os.path.join('assets', p.get('foto'))):
                     st.image(os.path.join('assets', p.get('foto')), width=120)

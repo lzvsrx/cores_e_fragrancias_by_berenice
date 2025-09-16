@@ -67,7 +67,9 @@ def create_tables():
             estilo TEXT,
             tipo TEXT,
             foto TEXT,
-            data_validade TEXT
+            data_validade TEXT,
+            vendido INTEGER DEFAULT 0,  -- Adicionada a coluna 'vendido'
+            data_ultima_venda TEXT     -- Adicionada a coluna 'data_ultima_venda'
         );
     """)
 
@@ -174,12 +176,43 @@ def delete_produto(produto_id):
         except Exception:
             pass
 
+def mark_produto_as_sold(produto_id, quantidade_vendida):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Recupera a quantidade atual e o nome do produto
+    produto = get_produto_by_id(produto_id)
+    if not produto:
+        conn.close()
+        return False
+        
+    quantidade_atual = produto.get("quantidade")
+    if quantidade_atual < quantidade_vendida:
+        conn.close()
+        return False
+
+    # Atualiza a quantidade, status de vendido e data
+    nova_quantidade = quantidade_atual - quantidade_vendida
+    vendido_status = 1 if nova_quantidade == 0 else 0
+    
+    cursor.execute("""
+        UPDATE produtos SET
+            quantidade = ?,
+            vendido = ?,
+            data_ultima_venda = ?
+        WHERE id = ?
+    """, (nova_quantidade, vendido_status, datetime.now().isoformat(), produto_id))
+    
+    conn.commit()
+    conn.close()
+    return True
+
 # ---------- CSV Export/Import ----------
 def export_produtos_to_csv(csv_path):
     produtos = get_all_produtos()
     if not produtos:
         raise ValueError('Nenhum produto para exportar')
-    keys = ['id','nome','preco','quantidade','marca','estilo','tipo','foto','data_validade']
+    keys = ['id','nome','preco','quantidade','marca','estilo','tipo','foto','data_validade', 'vendido', 'data_ultima_venda']
     with open(csv_path, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=keys)
         writer.writeheader()
@@ -200,8 +233,10 @@ def import_produtos_from_csv(csv_path):
             tipo = row.get('tipo')
             foto = row.get('foto') or None
             data_validade = row.get('data_validade') or None
-            conn.execute("""INSERT INTO produtos (nome, preco, quantidade, marca, estilo, tipo, foto, data_validade)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (nome, preco, quantidade, marca, estilo, tipo, foto, data_validade))
+            vendido = int(float(row.get('vendido') or 0))
+            data_ultima_venda = row.get('data_ultima_venda') or None
+            conn.execute("""INSERT INTO produtos (nome, preco, quantidade, marca, estilo, tipo, foto, data_validade, vendido, data_ultima_venda)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (nome, preco, quantidade, marca, estilo, tipo, foto, data_validade, vendido, data_ultima_venda))
     conn.commit()
     conn.close()
 

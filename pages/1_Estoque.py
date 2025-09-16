@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.database import get_all_produtos
+import os
 
 st.set_page_config(page_title="Estoque - Cores e Fragrâncias")
 
