@@ -1,6 +1,14 @@
 import streamlit as st
 from utils.database import get_all_produtos
 import os
+def load_css(file_name):
+    try:
+        with open(file_name) as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.warning("Arquivo style.css não encontrado. As cores personalizadas não serão aplicadas.")
+
+load_css("style.css")
 
 st.set_page_config(page_title="Estoque - Cores e Fragrâncias")
 
