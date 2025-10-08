@@ -7,17 +7,21 @@ from utils.database import (
     mark_produto_as_sold
 )
 
-# Lista de marcas de produtos.
-MARCAS = ["Eudora", "O Boticário", "Jequiti", "Avon", "Mary Kay", "Natura"]
+# Lista de marcas de produtos ATUALIZADA.
+MARCAS = [
+    "Eudora", "O Boticário", "Jequiti", "Avon", "Mary Kay", "Natura",
+    "Oui-Original-Unique-Individuel", "Pierre Alexander", "Tupperware" # NOVAS MARCAS ADICIONADAS
+]
 
-# Lista de estilos de produtos.
+# Lista de estilos de produtos ATUALIZADA.
 ESTILOS = [
     "Perfumaria", "Skincare", "Cabelo", "Corpo e Banho", "Make", "Masculinos", "Femininos Nina Secrets",
     "Marcas", "Infantil", "Casa", "Solar", "Maquiage", "Teen", "Kits e Presentes",
-    "Cuidados com o Corpo", "Lançamentos"
+    "Cuidados com o Corpo", "Lançamentos",
+    "Acessórios de Casa" # NOVO ESTILO ADICIONADO (Baseado em Tupperware e similares)
 ]
 
-# Lista de tipos de produtos.
+# Lista de tipos de produtos ATUALIZADA.
 TIPOS = [
     "Perfumaria masculina", "Perfumaria feminina", "Body splash", "Body spray", "Eau de parfum",
     "Desodorantes", "Perfumaria infantil", "Perfumaria vegana", "Familia olfativa",
@@ -35,7 +39,10 @@ TIPOS = [
     "Roll On Fragranciado", "Roll On On Duty", "Sabonete líquido",
     "Sabonete em barra", "Shampoo 2 em 1", "Spray corporal", "Booster de Tratamento",
     "Creme para Pentear", "Óleo de Tratamento", "Pré-shampoo",
-    "Sérum de Tratamento", "Shampoo e Condicionador"
+    "Sérum de Tratamento", "Shampoo e Condicionador",
+    # NOVOS TIPOS DE PRODUTOS PARA CASA/TUPPERWARE ADICIONADOS:
+    "Garrafas", "Armazenamentos", "Micro-ondas", "Servir", "Preparo",
+    "Infantil", "Lazer/Outdoor", "Presentes"
 ]
 
 st.set_page_config(page_title="Gerenciar Produtos - Cores e Fragrâncias")
@@ -63,6 +70,8 @@ def add_product_form():
             photo_name = None
             if foto:
                 photo_name = f"{int(datetime.now().timestamp())}_{foto.name}"
+                if not os.path.exists("assets"):
+                    os.makedirs("assets")
                 with open(os.path.join("assets", photo_name), "wb") as f:
                     f.write(foto.getbuffer())
             add_produto(nome, float(preco), int(quantidade), marca, estilo, tipo, photo_name, data_validade.isoformat())
@@ -82,6 +91,8 @@ def manage_products_list():
         if st.button('Exportar CSV'):
             csv_path = os.path.join('data','produtos_export.csv')
             try:
+                if not os.path.exists('data'):
+                    os.makedirs('data')
                 export_produtos_to_csv(csv_path)
                 st.success('CSV exportado para ' + csv_path)
                 st.download_button('Baixar CSV', data=open(csv_path,'rb').read(), file_name='produtos_export.csv')
@@ -91,6 +102,8 @@ def manage_products_list():
         uploaded_csv = st.file_uploader('Importar CSV', type=['csv'], key='import_csv')
         if uploaded_csv is not None:
             save_path = os.path.join('data','import_tmp.csv')
+            if not os.path.exists('data'):
+                os.makedirs('data')
             with open(save_path,'wb') as f:
                 f.write(uploaded_csv.getbuffer())
             try:
@@ -103,6 +116,8 @@ def manage_products_list():
         if st.button('Gerar Relatório PDF'):
             pdf_path = os.path.join('data','relatorio_estoque.pdf')
             try:
+                if not os.path.exists('data'):
+                    os.makedirs('data')
                 generate_stock_pdf(pdf_path)
                 st.success('PDF gerado: ' + pdf_path)
                 with open(pdf_path,'rb') as f:
@@ -113,13 +128,23 @@ def manage_products_list():
     for p in produtos:
         produto_id = p.get("id")
         # Improved card-like layout
-        with st.container():
+        with st.container(border=True): # Adicionado border para melhor visualização
             cols = st.columns([3,1,1])
             with cols[0]:
-                st.markdown(f"### {p.get('nome')}  <small style='color:gray'>ID: {produto_id}</small>", unsafe_allow_html=True)
-                st.write(f"**Preço:** R$ {float(p.get('preco')):.2f}   •   **Quantidade:** {p.get('quantidade')}")
-                st.write(f"**Marca:** {p.get('marca')}   •   **Estilo:** {p.get('estilo')}   •   **Tipo:** {p.get('tipo')}")
-                st.write(f"**Validade:** {p.get('data_validade') or '-'}")
+                st.markdown(f"### {p.get('nome')}  <small style='color:gray'>ID: {produto_id}</small>", unsafe_allow_html=True)
+                st.write(f"**Preço:** R$ {float(p.get('preco')):.2f}   •   **Quantidade:** {p.get('quantidade')}")
+                st.write(f"**Marca:** {p.get('marca')}   •   **Estilo:** {p.get('estilo')}   •   **Tipo:** {p.get('tipo')}")
+                data_validade_str = p.get('data_validade')
+                # Formata a data de validade para exibição (DD/MM/AAAA)
+                if data_validade_str:
+                    try:
+                        validade_formatada = datetime.fromisoformat(data_validade_str).strftime('%d/%m/%Y')
+                    except ValueError:
+                        validade_formatada = data_validade_str # Se a formatação falhar, mostra o original
+                else:
+                    validade_formatada = '-'
+                    
+                st.write(f"**Validade:** {validade_formatada}")
                 
                 # Botão de venda adicionado aqui
                 if p.get("quantidade") > 0:
@@ -149,6 +174,8 @@ def manage_products_list():
                         st.rerun()
                 else:
                     st.text('Remover (admin)')
+            
+            st.markdown("---") # Separador para o próximo produto
 
     if st.session_state.get('edit_mode'):
         show_edit_form()
@@ -162,6 +189,14 @@ def show_edit_form():
         return
 
     st.subheader(f"Editar Produto: {produto.get('nome')}")
+    # Converte a data de validade para o formato que o st.date_input espera
+    default_date = None
+    if produto.get("data_validade"):
+        try:
+            default_date = datetime.fromisoformat(produto.get("data_validade")).date()
+        except ValueError:
+            default_date = None
+
     with st.form("edit_product_form"):
         nome = st.text_input("Nome", value=produto.get("nome"))
         col1, col2 = st.columns(2)
@@ -172,21 +207,38 @@ def show_edit_form():
         marca = st.selectbox("Marca", MARCAS, index=MARCAS.index(produto.get("marca")) if produto.get("marca") in MARCAS else 0)
         estilo = st.selectbox("Estilo", ESTILOS, index=ESTILOS.index(produto.get("estilo")) if produto.get("estilo") in ESTILOS else 0)
         tipo = st.selectbox("Tipo", TIPOS, index=TIPOS.index(produto.get("tipo")) if produto.get("tipo") in TIPOS else 0)
-        data_validade = st.date_input("Data de Validade", value=datetime.fromisoformat(produto.get("data_validade")).date() if produto.get("data_validade") else None)
+        data_validade = st.date_input("Data de Validade", value=default_date)
         uploaded = st.file_uploader("Alterar Foto", type=["jpg","png","jpeg"])
         save = st.form_submit_button("Salvar Alterações")
+        cancel = st.form_submit_button("Cancelar Edição")
+
 
         if save:
             photo_name = produto.get("foto")
             if uploaded:
                 photo_name = f"{int(datetime.now().timestamp())}_{uploaded.name}"
+                if not os.path.exists("assets"):
+                    os.makedirs("assets")
                 with open(os.path.join("assets", photo_name), "wb") as f:
                     f.write(uploaded.getbuffer())
+            
+            # Validação: nome não pode ser vazio
+            if not nome:
+                st.error("Nome é obrigatório.")
+                return
 
-            update_produto(produto_id, nome, float(preco), int(quantidade), marca, estilo, tipo, photo_name, data_validade.isoformat())
+            # Garantir que a data de validade seja salva em formato ISO ou nulo.
+            validade_iso = data_validade.isoformat() if data_validade else None
+
+            update_produto(produto_id, nome, float(preco), int(quantidade), marca, estilo, tipo, photo_name, validade_iso)
             st.success("Produto atualizado com sucesso!")
             st.session_state["edit_mode"] = False
             st.rerun()
+        
+        if cancel:
+            st.session_state["edit_mode"] = False
+            st.rerun()
+
 
 # Página principal de gerenciamento (somente se logado)
 if not st.session_state.get("logged_in"):
