@@ -6,7 +6,14 @@ from utils.database import (
     export_produtos_to_csv, import_produtos_from_csv, generate_stock_pdf,
     mark_produto_as_sold
 )
+def load_css(file_name):
+    try:
+        with open(file_name) as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.warning("Arquivo style.css não encontrado. As cores personalizadas não serão aplicadas.")
 
+load_css("style.css")
 # Lista de marcas de produtos ATUALIZADA.
 MARCAS = [
     "Eudora", "O Boticário", "Jequiti", "Avon", "Mary Kay", "Natura",
