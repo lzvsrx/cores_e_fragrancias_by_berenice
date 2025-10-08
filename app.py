@@ -1,19 +1,22 @@
 import streamlit as st
 from utils.database import create_tables
-def load_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-load_css("style.css") # Certifique-se que o arquivo style.css está na raiz
 
-# Inicializa o banco de dados e as tabelas
 create_tables()
+def load_css(file_name):
+    try:
+        with open(file_name) as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.warning("Arquivo style.css não encontrado. As cores personalizadas não serão aplicadas.")
+
+load_css("style.css") # Certifique-se que o arquivo style.css está na raiz
+# --- FIM DA INJEÇÃO ---
 
 st.set_page_config(
     page_title="Cores e Fragrâncias by Berenice",
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
 st.title("🌸 Cores e Fragrâncias by Berenice 🌸")
 
 st.markdown("""
