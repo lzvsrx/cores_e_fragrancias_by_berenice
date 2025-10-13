@@ -1,12 +1,8 @@
 import streamlit as st
 from utils.database import get_all_produtos
 def load_css(file_name):
-    try:
-        with open(file_name) as f:
-            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-    except FileNotFoundError:
-        st.warning("Arquivo style.css não encontrado. As cores personalizadas não serão aplicadas.")
-
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 load_css("style.css")
 
 st.set_page_config(page_title="Produtos Vendidos - Cores e Fragrâncias")
@@ -23,5 +19,4 @@ else:
         st.write(f"**Preço de Venda:** R$ {float(p.get('preco')):.2f}")
         st.write(f"**Data da Venda:** {p.get('data_ultima_venda') or 'N/A'}")
         st.write(f"**Marca:** {p.get('marca')}")
-
         st.markdown("---")

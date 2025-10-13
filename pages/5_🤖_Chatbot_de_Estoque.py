@@ -4,12 +4,8 @@ from utils.database import (
 )
 from datetime import datetime
 def load_css(file_name):
-    try:
-        with open(file_name) as f:
-            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-    except FileNotFoundError:
-        st.warning("Arquivo style.css não encontrado. As cores personalizadas não serão aplicadas.")
-
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 load_css("style.css")
 
 # Importações de listas que estão no arquivo de gerenciamento (para facilitar)
@@ -246,5 +242,4 @@ if user_input := st.chat_input("Seu comando..."):
         st.markdown(response)
         
     # Adiciona a resposta do assistente ao histórico
-
     st.session_state["chat_history"].append({"role": "assistant", "content": response})

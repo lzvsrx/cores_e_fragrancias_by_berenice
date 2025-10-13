@@ -7,12 +7,8 @@ from utils.database import (
     mark_produto_as_sold
 )
 def load_css(file_name):
-    try:
-        with open(file_name) as f:
-            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-    except FileNotFoundError:
-        st.warning("Arquivo style.css não encontrado. As cores personalizadas não serão aplicadas.")
-
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 load_css("style.css")
 # Lista de marcas de produtos ATUALIZADA.
 MARCAS = [
